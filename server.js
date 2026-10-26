@@ -10,7 +10,7 @@ const JWT_SECRET = 'SakonNakhonDataCenter_SecureKey_2026';
 
 app.use(cors());
 app.use(express.json());
-app.use(express.static('public'));
+app.use(express.static(__dirname));
 
 const authenticateToken = (req, res, next) => {
     const authHeader = req.headers['authorization'];
