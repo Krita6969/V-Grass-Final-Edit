@@ -123,12 +123,23 @@ app.get('/api/farmers', authenticateToken, async (req, res) => {
 });
 
 app.post('/api/farmers', authenticateToken, async (req, res) => {
-    const { name, phone, address } = req.body;
     try {
-        const count = await prisma.farmer.count();
-        const code = 'F' + String(count + 1).padStart(3, '0');
-        const farmer = await prisma.farmer.create({ data: { code, name, phone, address } });
-        res.status(201).json(farmer);
+        const { name, phone, address, detail } = req.body;
+        
+        // สร้างรหัสโค้ดแบบสุ่มไม่ให้ซ้ำกัน เช่น P-XXXX
+        const randomCode = 'P-' + Math.floor(1000 + Math.random() * 9000);
+
+        const newFarmer = await prisma.farmer.create({
+            data: {
+                code: randomCode, // ใช้รหัสสุ่มที่ไม่ซ้ำแน่นอน
+                name,
+                phone,
+                address,
+                detail
+            }
+        });
+
+        res.status(201).json(newFarmer);
     } catch (error) {
         res.status(400).json({ message: error.message });
     }
@@ -152,10 +163,18 @@ app.get('/api/lands', authenticateToken, async (req, res) => {
 app.post('/api/lands', authenticateToken, async (req, res) => {
     const { name, farmerId, areaRai, soilType, soilPh, waterSystem } = req.body;
     try {
-        const count = await prisma.land.count();
-        const code = 'L' + String(count + 1).padStart(3, '0');
+        // เปลี่ยนการสร้าง code ป้องกันรหัสซ้ำ
+        const randomCode = 'L-' + Math.floor(1000 + Math.random() * 9000);
         const land = await prisma.land.create({
-            data: { code, name, farmerId, areaRai: parseFloat(areaRai), soilType, soilPh: parseFloat(soilPh), waterSystem }
+            data: { 
+                code: randomCode, 
+                name, 
+                farmerId: farmerId || (await prisma.farmer.findFirst())?.id, 
+                areaRai: parseFloat(areaRai), 
+                soilType, 
+                soilPh: parseFloat(soilPh), 
+                waterSystem 
+            }
         });
         res.status(201).json(land);
     } catch (error) {
