@@ -1,0 +1,133 @@
+// ==========================================
+// 1. การตั้งค่าการเชื่อมต่อฐานข้อมูลและ Client
+// ==========================================
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// ==========================================
+// 2. ตารางผู้ใช้งานระบบ (User / RBAC)
+// ==========================================
+model User {
+  id        String   @id @default(uuid())
+  username  String   @unique
+  password  String
+  fullName  String
+  role      String   @default("FARMER") // สิทธิ์ผู้ใช้: FARMER, AGENT, ADMIN
+  farmerId  String?  @unique
+  farmer    Farmer?  @relation(fields: [farmerId], references: [id], onDelete: SetNull)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ==========================================
+// 3. ตารางข้อมูลเกษตรกร (Farmer)
+// ==========================================
+model Farmer {
+  id        String           @id @default(uuid())
+  code      String           @unique
+  name      String
+  phone     String
+  address   String
+  user      User?
+  lands     Land[]           // เชื่อมโยงกับตารางแปลงเพาะปลูก
+  plans     ProductionPlan[] // เชื่อมโยงกับตารางแผนการผลิต
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+}
+
+// ==========================================
+// 4. ตารางแปลงเพาะปลูก (Land)
+// ==========================================
+model Land {
+  id          String           @id @default(uuid())
+  code        String           @unique
+  name        String
+  farmerId    String
+  farmer      Farmer           @relation(fields: [farmerId], references: [id], onDelete: Cascade)
+  areaRai     Float            // ขนาดพื้นที่ (ไร่)
+  soilType    String           // ประเภทดิน
+  soilPh      Float            // ค่า pH ดิน
+  waterSystem String           // ระบบน้ำ
+  plans       ProductionPlan[] // เชื่อมโยงกับตารางแผนการผลิต
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+}
+
+// ==========================================
+// 5. ตารางพืชเศรษฐกิจ (Crop) [เพิ่มฟิลด์ระยะปลูก]
+// ==========================================
+model Crop {
+  id            String           @id @default(uuid())
+  code          String           @unique
+  name          String
+  durationDays  Int              // ระยะเวลาปลูก (วัน)
+  yieldPerRai   Float            // ผลผลิตต่อไร่ (กก.)
+  costPerRai    Float            // ต้นทุนต่อไร่ (บาท)
+  pricePerKg    Float            // ราคาขายต่อ กก. (บาท)
+  careLevel     String           // ระดับการดูแล
+  spacingMeter  String           @default("0.5 x 0.5") // ✨ [เพิ่มใหม่ตามอาจารย์แก้] ระยะทำการปลูก (เมตร * เมตร)
+  cyclesPerYear Int              @default(1)
+  isSampleData  Boolean          @default(true)
+  plans         ProductionPlan[]
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+}
+
+// ==========================================
+// 6. ตารางข้อมูลตลาดและผู้รับซื้อ (Market) [ตารางใหม่]
+// ==========================================
+model Market {
+  id           String   @id @default(uuid())
+  buyerName    String   // ✨ [เพิ่มใหม่ตามอาจารย์แก้] ชื่อผู้รับซื้อ / ตลาด
+  targetCrop   String   // ✨ [เพิ่มใหม่ตามอาจารย์แก้] พืชที่ต้องการ
+  quantityKg   Float    // ✨ [เพิ่มใหม่ตามอาจารย์แก้] ปริมาณที่ต้องการ (กก.)
+  buyingPrice  Float    // ✨ [เพิ่มใหม่ตามอาจารย์แก้] ราคารับซื้อ (บาท/กก.)
+  demandStatus String   // ✨ [เพิ่มใหม่ตามอาจารย์แก้] สถานะความต้องการ (เช่น เพียงพอ, ต้องการสูง)
+  contactPhone String?  // ✨ [เพิ่มใหม่ตามอาจารย์แก้] เบอร์ติดต่อผู้รับซื้อ
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+// ==========================================
+// 7. ตารางแผนการผลิต (ProductionPlan) [รองรับ Multi-Crop]
+// ==========================================
+model ProductionPlan {
+  id            String         @id @default(uuid())
+  code          String         @unique
+  farmerId      String
+  farmer        Farmer         @relation(fields: [farmerId], references: [id], onDelete: Cascade)
+  landId        String
+  land          Land           @relation(fields: [landId], references: [id], onDelete: Cascade)
+  cropId        String?
+  crop          Crop?          @relation(fields: [cropId], references: [id], onDelete: SetNull)
+  cropDetails   String?        // ✨ [เพิ่มใหม่ตามอาจารย์แก้] JSON String บันทึกพืชผสมผสาน > 2 ชนิด
+  areaUsedRai   Float
+  subPlots      Int            @default(1)
+  startDate     DateTime
+  rounds        Int            @default(1)
+  status        String         @default("กำลังดำเนินการ")
+  costBreakdown CostBreakdown?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+}
+
+// ==========================================
+// 8. ตารางแจกแจงรายละเอียดต้นทุน (CostBreakdown)
+// ==========================================
+model CostBreakdown {
+  id             String         @id @default(uuid())
+  planId         String         @unique
+  plan           ProductionPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  costSeed       Float          @default(0)    // ค่าเมล็ดพันธุ์
+  costFertilizer Float          @default(0)    // ค่าปุ๋ย/ยา
+  costLabor      Float          @default(0)    // ค่าแรงงาน
+  costWaterElec  Float          @default(0)    // ค่าน้ำ/ค่าไฟ
+  costOther      Float          @default(0)    // ค่าใช้จ่ายอื่นๆ
+  sellablePct    Float          @default(90.0) // เปอร์เซ็นต์ผลผลิตที่จำหน่ายได้
+}
