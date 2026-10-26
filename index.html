@@ -1108,12 +1108,8 @@
         let usersData = [
             { email: 'admin@vgrass.com', fullname: 'นายสมชาย ใจดี', role: 'ผู้ดูแลระบบ (Admin)' }
         ];
-        let farmersData = [
-            { id: '1', code: 'P-1', name: 'นายสมศักดิ์ มีสุข', phone: '081-234-5678', district: 'อ.เมืองสกลนคร (ต.ธาตุเชิงชุม)', addressDetail: '123/4 หมู่ 5' }
-        ];
-        let landsData = [
-            { id: '1', name: 'แปลงสระบัว A1', farmerName: 'นายสมศักดิ์ มีสุข', areaRai: 2.5, sizeRai: 2.5, soilPh: 6.5, phValue: 6.5, soilType: 'ดินร่วนปนทราย', waterSystem: 'สปริงเกอร์' }
-        ];
+        let farmersData = [];
+        let landsData = [];
         let currentUser = null;
 
         let editingFarmerIndex = null;
@@ -1580,29 +1576,34 @@
             document.getElementById('dash-stat-crops').innerHTML = `${totalCrops} ชนิด <span class="text-[10px] text-indigo-600 font-bold">★ GI ${totalGI} พืช</span>`;
         }
 
-        function switchTab(tabId) {
-            document.querySelectorAll('main > section').forEach(t => t.classList.add('hidden'));
-            const targetSection = document.getElementById(`tab-${tabId}`);
-            if (targetSection) targetSection.classList.remove('hidden');
+        // --- โค้ดใหม่ที่เติมแล้ว ---
+function switchTab(tabId) {
+    document.querySelectorAll('main > section').forEach(t => t.classList.add('hidden'));
+    const targetSection = document.getElementById(`tab-${tabId}`);
+    if (targetSection) targetSection.classList.remove('hidden');
 
-            document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('sidebar-item-active'));
-            const menuBtn = document.getElementById(`menu-${tabId}`);
-            if (menuBtn) menuBtn.classList.add('sidebar-item-active');
+    document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('sidebar-item-active'));
+    const menuBtn = document.getElementById(`menu-${tabId}`);
+    if (menuBtn) menuBtn.classList.add('sidebar-item-active');
 
-            if (tabId === 'dashboard') {
-                setTimeout(() => { if (gisMapObj) { gisMapObj.invalidateSize(); resetMapView(); } }, 200);
-            } else if (tabId === 'simulation') {
-                setTimeout(() => { renderCropPalette(); updateSimLandOptions(); initSimCharts(); }, 50);
-            } else if (tabId === 'analytics') {
-                setTimeout(() => initAnalyticsCharts(), 50);
-            } else if (tabId === 'planning') {
-                updatePlanningLandOptions();
-                populatePlanningCropOptions();
-                updatePlanningTimeline();
-            } else if (tabId === 'settings') {
-                fetchUsersFromDB();
-            }
-        }
+    if (tabId === 'dashboard') {
+        setTimeout(() => { if (gisMapObj) { gisMapObj.invalidateSize(); resetMapView(); } }, 200);
+    } else if (tabId === 'farmers') {
+        fetchFarmersFromDB(); // <--- เพิ่มบรรทัดนี้
+    } else if (tabId === 'lands') {
+        fetchLandsFromDB();   // <--- เพิ่มบรรทัดนี้
+    } else if (tabId === 'simulation') {
+        setTimeout(() => { renderCropPalette(); updateSimLandOptions(); initSimCharts(); }, 50);
+    } else if (tabId === 'analytics') {
+        setTimeout(() => initAnalyticsCharts(), 50);
+    } else if (tabId === 'planning') {
+        updatePlanningLandOptions();
+        populatePlanningCropOptions();
+        updatePlanningTimeline();
+    } else if (tabId === 'settings') {
+        fetchUsersFromDB();
+    }
+}
 
         function initSakon18GISMap() {
             const container = document.getElementById('gis-map-container');
