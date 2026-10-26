@@ -2077,11 +2077,21 @@ function switchTab(tabId) {
         }
 
         function renderExtraMarkets() {
-            const tbody = document.getElementById('extra-market-table');
-            if (!tbody) return;
-            tbody.innerHTML = extraMarketsData.length ? extraMarketsData.map((m, i) => `
-                <tr><td class="p-3 font-bold">${m.buyerName}</td><td class="p-3">${m.targetCrop}</td><td class="p-3">${Number(m.quantityKg).toLocaleString()}</td><td class="p-3">${Number(m.buyingPrice).toLocaleString()}</td><td class="p-3">${m.demandStatus}</td><td class="p-3">${m.contactPhone || '-'}</td><td class="p-3"><button type="button" onclick="deleteExtraMarket(${i})" class="text-red-600 font-bold">ลบ</button></td></tr>`).join('') : '<tr><td colspan="7" class="p-4 text-center text-slate-400">ยังไม่มีข้อมูลผู้รับซื้อที่เพิ่มใหม่</td></tr>';
-        }
+    const tbody = document.getElementById('extra-market-table');
+    if (!tbody) return;
+    tbody.innerHTML = extraMarketsData.length ? extraMarketsData.map((m, i) => `
+        <tr class="hover:bg-slate-50">
+            <td class="p-3 font-bold text-slate-800">${m.buyerName}</td>
+            <td class="p-3 font-semibold text-indigo-800">${m.targetCrop}</td>
+            <td class="p-3">${Number(m.quantityKg).toLocaleString()} กก.</td>
+            <td class="p-3 font-bold">${Number(m.buyingPrice).toLocaleString()} บาท/กก.</td>
+            <td class="p-3"><span class="bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-full text-[10px] font-bold">${m.demandStatus}</span></td>
+            <td class="p-3 text-slate-500">${m.contactPhone || '-'}</td>
+            <td class="p-3 text-center">
+                <button type="button" onclick="deleteExtraMarket(${i})" class="text-red-600 hover:text-red-800 font-bold text-xs"><i class="fa-solid fa-trash-can"></i> ลบ</button>
+            </td>
+        </tr>`).join('') : '<tr><td colspan="7" class="p-4 text-center text-slate-400">ยังไม่มีข้อมูลผู้รับซื้อในฐานข้อมูล</td></tr>';
+}
 
         async function addExtraMarket(event) {
     event.preventDefault();
